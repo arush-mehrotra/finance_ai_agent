@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     """Application settings."""
 
     anthropic_api_key: str
-    news_api_key: str = ""
+    finnhub_api_key: str
     host: str = "0.0.0.0"
     port: int = 8000
 
