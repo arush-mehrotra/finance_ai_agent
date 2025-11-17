@@ -22,6 +22,10 @@ case "$TEST_TYPE" in
         echo "Running news service tests..."
         python backend/tests/test_news_service.py
         ;;
+    ai)
+        echo "Running AI agent tests..."
+        python backend/tests/test_ai_agent.py
+        ;;
     all)
         echo "Running all tests..."
         echo ""
@@ -30,11 +34,16 @@ case "$TEST_TYPE" in
         echo "================================"
         echo ""
         python backend/tests/test_news_service.py
+        echo ""
+        echo "================================"
+        echo ""
+        python backend/tests/test_ai_agent.py
         ;;
     *)
-        echo "Usage: ./run_tests.sh [stock|news|all]"
+        echo "Usage: ./run_tests.sh [stock|news|ai|all]"
         echo "  stock - Run stock service tests only"
         echo "  news  - Run news service tests only"
+        echo "  ai    - Run AI agent tests only"
         echo "  all   - Run all tests (default)"
         exit 1
         ;;
