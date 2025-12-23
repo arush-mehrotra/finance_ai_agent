@@ -427,9 +427,9 @@ function App() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-bold">Recommendation:</span>
                             <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                              msg.recommendation.recommendation === 'BUY' ? 'bg-success' :
-                              msg.recommendation.recommendation === 'SELL' ? 'bg-error' :
-                              'bg-gray-600'
+                              msg.recommendation.recommendation === 'BUY' ? 'bg-success text-white' :
+                              msg.recommendation.recommendation === 'SELL' ? 'bg-error text-white' :
+                              'bg-gray-600 text-white'
                             }`}>
                               {msg.recommendation.recommendation}
                             </span>
@@ -439,7 +439,9 @@ function App() {
                           </p>
                         </div>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className={`text-xs mt-2 ${
+                        msg.type === 'user' ? 'text-blue-200' : 'text-gray-400'
+                      }`}>
                         {msg.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
