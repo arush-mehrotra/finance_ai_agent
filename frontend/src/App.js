@@ -13,6 +13,11 @@ function App() {
   const [chatInput, setChatInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
 
+  // News state
+  const [newsData, setNewsData] = useState([]);
+  const [newsSentiment, setNewsSentiment] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+
   // Check backend connection on mount
   useEffect(() => {
     checkConnection();
@@ -21,6 +26,36 @@ function App() {
   const checkConnection = async () => {
     const connected = await api.healthCheck();
     setIsConnected(connected);
+  };
+
+  // Fetch news when stock changes
+  useEffect(() => {
+    if (currentStock) {
+      fetchNews();
+    }
+  }, [currentStock]);
+
+  const fetchNews = async () => {
+    if (!currentStock) return;
+
+    setNewsLoading(true);
+    try {
+      // Fetch news sentiment which includes recent news articles
+      const sentimentResult = await api.getNewsSentiment(currentStock);
+
+      if (sentimentResult.success) {
+        setNewsSentiment(sentimentResult.data);
+        console.log(sentimentResult.data);
+        // Extract recent news from sentiment data
+        setNewsData(sentimentResult.data.recent_news || []);
+      }
+    } catch (err) {
+      console.error('Error fetching news:', err);
+      setNewsData([]);
+      setNewsSentiment(null);
+    } finally {
+      setNewsLoading(false);
+    }
   };
 
   const handleSearch = async () => {
@@ -126,6 +161,17 @@ function App() {
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
     return `$${num.toFixed(2)}`;
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return 'Yesterday';
+    return date.toLocaleDateString();
   };
 
   return (
@@ -234,6 +280,106 @@ function App() {
               <div className="bg-card rounded-xl p-6 shadow-xl">
                 <h3 className="text-xl font-bold mb-4">Stock Information</h3>
                 <p className="text-gray-400 text-center py-8">Search for a stock to view information</p>
+              </div>
+            )}
+
+            {/* News Panel */}
+            {currentStock && (
+              <div className="bg-card rounded-xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">Latest News</h3>
+                  {newsLoading && (
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-accent rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sentiment Summary */}
+                {newsSentiment && newsSentiment.sentiment && (
+                  <div className="bg-dark rounded-lg p-4 mb-4 text-center">
+                    <p className="text-sm text-gray-400 mb-2">Overall Sentiment</p>
+                    <span className={`px-4 py-2 rounded-full text-lg font-bold ${
+                      newsSentiment.sentiment === 'positive' ? 'bg-success bg-opacity-20 text-success' :
+                      newsSentiment.sentiment === 'negative' ? 'bg-error bg-opacity-20 text-error' :
+                      'bg-gray-600 bg-opacity-20 text-gray-300'
+                    }`}>
+                      {newsSentiment.sentiment.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                {/* News Articles List */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {newsData.length === 0 && !newsLoading ? (
+                    <p className="text-gray-400 text-center py-8">No news articles found</p>
+                  ) : (
+                    newsData.map((article, index) => (
+                      <div key={index} className="bg-dark rounded-lg p-3 hover:bg-gray-800 transition-colors">
+                        <div className="flex gap-3">
+                          {/* Article Thumbnail */}
+                          {article.image && (
+                            <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-700">
+                              <img
+                                src={article.image}
+                                alt={article.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                                loading="lazy"
+                              />
+                            </div>
+                          )}
+
+                          {/* Article Content */}
+                          <div className="flex-1 min-w-0">
+                            <a
+                              href={article.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-white hover:text-primary transition-colors"
+                            >
+                              <h4 className="font-semibold text-sm leading-tight line-clamp-2 mb-1">
+                                {article.title}
+                              </h4>
+                            </a>
+
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs text-gray-400">
+                                {article.source}
+                              </span>
+                              <span className="text-xs text-gray-500">•</span>
+                              <span className="text-xs text-gray-400">
+                                {formatTimestamp(article.published_at)}
+                              </span>
+                              {article.sentiment && (
+                                <>
+                                  <span className="text-xs text-gray-500">•</span>
+                                  <span className={`text-xs font-medium ${
+                                    article.sentiment === 'positive' ? 'text-success' :
+                                    article.sentiment === 'negative' ? 'text-error' :
+                                    'text-gray-400'
+                                  }`}>
+                                    {article.sentiment}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            {article.description && (
+                              <p className="text-xs text-gray-400 line-clamp-2">
+                                {article.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
