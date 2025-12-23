@@ -18,10 +18,27 @@ function App() {
   const [newsSentiment, setNewsSentiment] = useState(null);
   const [newsLoading, setNewsLoading] = useState(false);
 
+  // Theme state
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
   // Check backend connection on mount
   useEffect(() => {
     checkConnection();
   }, []);
+
+  // Load theme preference from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === 'dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+  };
 
   const checkConnection = async () => {
     const connected = await api.healthCheck();
@@ -175,29 +192,39 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-dark text-white">
-      {/* Header */}
-      <header className="bg-card border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📈</span>
+    <div className={isDarkMode ? 'dark' : ''}>
+      <div className="min-h-screen bg-light dark:bg-dark text-gray-900 dark:text-white transition-colors">
+        {/* Header */}
+        <header className="bg-light-card dark:bg-card border-b border-gray-200 dark:border-gray-700">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📈</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">Finance AI Agent</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">AI-Powered Investment Insights</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold">Finance AI Agent</h1>
-                <p className="text-sm text-gray-400">AI-Powered Investment Insights</p>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Toggle theme"
+                >
+                  {isDarkMode ? '🌞' : '🌙'}
+                </button>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success animate-pulse' : 'bg-error'}`}></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {isConnected ? 'Connected' : 'Disconnected'}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success animate-pulse' : 'bg-error'}`}></div>
-              <span className="text-sm text-gray-400">
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
@@ -205,7 +232,7 @@ function App() {
           {/* Left Panel: Dashboard */}
           <div className="space-y-6">
             {/* Stock Search */}
-            <div className="bg-card rounded-xl p-6 shadow-xl">
+            <div className="bg-light-card dark:bg-card rounded-xl p-6 shadow-xl border border-gray-200 dark:border-transparent">
               <h2 className="text-xl font-bold mb-4">Search Stock</h2>
               <div className="flex space-x-3">
                 <input
@@ -214,7 +241,7 @@ function App() {
                   onChange={(e) => setTicker(e.target.value.toUpperCase())}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Enter ticker symbol (e.g., AAPL, TSLA)"
-                  className="flex-1 bg-dark border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="flex-1 bg-gray-50 dark:bg-dark border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button
                   onClick={handleSearch}
@@ -233,11 +260,11 @@ function App() {
 
             {/* Stock Info Card */}
             {stockInfo ? (
-              <div className="bg-card rounded-xl p-6 shadow-xl">
+              <div className="bg-light-card dark:bg-card rounded-xl p-6 shadow-xl border border-gray-200 dark:border-transparent">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold">{stockInfo.name}</h3>
-                    <p className="text-gray-400">{stockInfo.ticker}</p>
+                    <p className="text-gray-600 dark:text-gray-400">{stockInfo.ticker}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-bold">${stockInfo.current_price?.toFixed(2) || 'N/A'}</p>
@@ -246,20 +273,20 @@ function App() {
 
                 {/* Quick Metrics */}
                 <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div className="bg-dark rounded-lg p-4">
-                    <p className="text-gray-400 text-sm">Market Cap</p>
+                  <div className="bg-gray-50 dark:bg-dark rounded-lg p-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">Market Cap</p>
                     <p className="text-lg font-bold mt-1">{formatNumber(stockInfo.market_cap)}</p>
                   </div>
-                  <div className="bg-dark rounded-lg p-4">
-                    <p className="text-gray-400 text-sm">P/E Ratio</p>
+                  <div className="bg-gray-50 dark:bg-dark rounded-lg p-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">P/E Ratio</p>
                     <p className="text-lg font-bold mt-1">{stockInfo.pe_ratio?.toFixed(2) || 'N/A'}</p>
                   </div>
-                  <div className="bg-dark rounded-lg p-4">
-                    <p className="text-gray-400 text-sm">Sector</p>
+                  <div className="bg-gray-50 dark:bg-dark rounded-lg p-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">Sector</p>
                     <p className="text-lg font-bold mt-1">{stockInfo.sector || 'N/A'}</p>
                   </div>
-                  <div className="bg-dark rounded-lg p-4">
-                    <p className="text-gray-400 text-sm">Industry</p>
+                  <div className="bg-gray-50 dark:bg-dark rounded-lg p-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">Industry</p>
                     <p className="text-lg font-bold mt-1">{stockInfo.industry || 'N/A'}</p>
                   </div>
                 </div>
@@ -277,15 +304,15 @@ function App() {
                 </div>
               </div>
             ) : (
-              <div className="bg-card rounded-xl p-6 shadow-xl">
+              <div className="bg-light-card dark:bg-card rounded-xl p-6 shadow-xl border border-gray-200 dark:border-transparent">
                 <h3 className="text-xl font-bold mb-4">Stock Information</h3>
-                <p className="text-gray-400 text-center py-8">Search for a stock to view information</p>
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8">Search for a stock to view information</p>
               </div>
             )}
 
             {/* News Panel */}
             {currentStock && (
-              <div className="bg-card rounded-xl p-6 shadow-xl">
+              <div className="bg-light-card dark:bg-card rounded-xl p-6 shadow-xl border border-gray-200 dark:border-transparent">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold">Latest News</h3>
                   {newsLoading && (
@@ -299,12 +326,12 @@ function App() {
 
                 {/* Sentiment Summary */}
                 {newsSentiment && newsSentiment.sentiment && (
-                  <div className="bg-dark rounded-lg p-4 mb-4 text-center">
-                    <p className="text-sm text-gray-400 mb-2">Overall Sentiment</p>
+                  <div className="bg-gray-50 dark:bg-dark rounded-lg p-4 mb-4 text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Overall Sentiment</p>
                     <span className={`px-4 py-2 rounded-full text-lg font-bold ${
                       newsSentiment.sentiment === 'positive' ? 'bg-success bg-opacity-20 text-success' :
                       newsSentiment.sentiment === 'negative' ? 'bg-error bg-opacity-20 text-error' :
-                      'bg-gray-600 bg-opacity-20 text-gray-300'
+                      'bg-gray-600 bg-opacity-20 text-gray-700 dark:text-gray-300'
                     }`}>
                       {newsSentiment.sentiment.toUpperCase()}
                     </span>
@@ -314,14 +341,14 @@ function App() {
                 {/* News Articles List */}
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {newsData.length === 0 && !newsLoading ? (
-                    <p className="text-gray-400 text-center py-8">No news articles found</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-center py-8">No news articles found</p>
                   ) : (
                     newsData.map((article, index) => (
-                      <div key={index} className="bg-dark rounded-lg p-3 hover:bg-gray-800 transition-colors">
+                      <div key={index} className="bg-gray-50 dark:bg-dark rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         <div className="flex gap-3">
                           {/* Article Thumbnail */}
                           {article.image && (
-                            <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-700">
+                            <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
                               <img
                                 src={article.image}
                                 alt={article.title}
@@ -340,7 +367,7 @@ function App() {
                               href={article.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-white hover:text-primary transition-colors"
+                              className="text-gray-900 dark:text-white hover:text-primary transition-colors"
                             >
                               <h4 className="font-semibold text-sm leading-tight line-clamp-2 mb-1">
                                 {article.title}
@@ -348,20 +375,20 @@ function App() {
                             </a>
 
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
                                 {article.source}
                               </span>
-                              <span className="text-xs text-gray-500">•</span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
                                 {formatTimestamp(article.published_at)}
                               </span>
                               {article.sentiment && (
                                 <>
-                                  <span className="text-xs text-gray-500">•</span>
+                                  <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
                                   <span className={`text-xs font-medium ${
                                     article.sentiment === 'positive' ? 'text-success' :
                                     article.sentiment === 'negative' ? 'text-error' :
-                                    'text-gray-400'
+                                    'text-gray-600 dark:text-gray-400'
                                   }`}>
                                     {article.sentiment}
                                   </span>
@@ -370,7 +397,7 @@ function App() {
                             </div>
 
                             {article.description && (
-                              <p className="text-xs text-gray-400 line-clamp-2">
+                              <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                                 {article.description}
                               </p>
                             )}
@@ -385,10 +412,10 @@ function App() {
           </div>
 
           {/* Right Panel: AI Chat */}
-          <div className="bg-card rounded-xl shadow-xl flex flex-col" style={{height: 'calc(100vh - 180px)'}}>
-            <div className="p-6 border-b border-gray-700">
+          <div className="bg-light-card dark:bg-card rounded-xl shadow-xl flex flex-col border border-gray-200 dark:border-transparent" style={{height: 'calc(100vh - 180px)'}}>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-bold">AI Assistant</h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {currentStock ? `Analyzing ${currentStock}` : 'Search for a stock to start'}
               </p>
             </div>
@@ -396,7 +423,7 @@ function App() {
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.length === 0 ? (
-                <div className="text-center text-gray-400 py-8">
+                <div className="text-center text-gray-600 dark:text-gray-400 py-8">
                   <p className="text-4xl mb-3">✨</p>
                   <p>Search for a stock to start analyzing!</p>
                 </div>
@@ -411,8 +438,8 @@ function App() {
                         msg.type === 'user'
                           ? 'bg-primary text-white'
                           : msg.type === 'error'
-                          ? 'bg-error bg-opacity-20 border border-error'
-                          : 'bg-dark text-white'
+                          ? 'bg-error bg-opacity-20 border border-error text-gray-900 dark:text-white'
+                          : 'bg-gray-100 dark:bg-dark text-gray-900 dark:text-white'
                       }`}
                     >
                       {msg.type === 'assistant' || msg.type === 'error' ? (
@@ -423,7 +450,7 @@ function App() {
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       )}
                       {msg.recommendation && (
-                        <div className="mt-3 p-3 bg-dark rounded-lg border border-gray-700">
+                        <div className="mt-3 p-3 bg-gray-50 dark:bg-dark rounded-lg border border-gray-200 dark:border-gray-700">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-bold">Recommendation:</span>
                             <span className={`px-3 py-1 rounded-full text-sm font-bold ${
@@ -434,13 +461,13 @@ function App() {
                               {msg.recommendation.recommendation}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-400">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             Confidence: {msg.recommendation.confidence}
                           </p>
                         </div>
                       )}
                       <p className={`text-xs mt-2 ${
-                        msg.type === 'user' ? 'text-blue-200' : 'text-gray-400'
+                        msg.type === 'user' ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'
                       }`}>
                         {msg.timestamp.toLocaleTimeString()}
                       </p>
@@ -450,7 +477,7 @@ function App() {
               )}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-dark rounded-lg p-4">
+                  <div className="bg-gray-100 dark:bg-dark rounded-lg p-4">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 bg-accent rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
@@ -462,7 +489,7 @@ function App() {
             </div>
 
             {/* Chat Input */}
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-3">
                 <input
                   type="text"
@@ -471,7 +498,7 @@ function App() {
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder={currentStock ? "Ask a question about the stock..." : "Search for a stock first..."}
                   disabled={!currentStock || loading}
-                  className="flex-1 bg-dark border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+                  className="flex-1 bg-gray-50 dark:bg-dark border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
                 />
                 <button
                   onClick={handleSendMessage}
@@ -485,6 +512,7 @@ function App() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }

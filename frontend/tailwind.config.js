@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -11,7 +12,9 @@ module.exports = {
         success: '#10B981',
         error: '#EF4444',
         dark: '#0F172A',
-        card: '#1E293B'
+        card: '#1E293B',
+        light: '#F8FAFC',
+        'light-card': '#FFFFFF'
       }
     },
   },
